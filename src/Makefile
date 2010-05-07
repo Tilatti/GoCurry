@@ -9,7 +9,6 @@ all: $(EXE)
 
 $(EXE):
 	$(GHC) --make $(SRC) -o $@
-	-mv $(EXE) ../
 
 clean:
 	-rm $(OBJECT) $(OBJECT_INT)
