@@ -12,6 +12,8 @@ import Data.Maybe (Maybe, fromJust, isJust, isNothing)
 import ReplyRequest (reply_request)
 import ConnectionList (Connections, ConnectionId, MConnection, ConnectionId, Connection)
 
+import Config (port, hostname)
+
 --Must be remplaced by a better implementation
 chomp :: String -> String
 chomp (c:[]) = []

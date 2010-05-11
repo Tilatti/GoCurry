@@ -29,8 +29,8 @@ get_ressource request_line (is_dir, is_file) channel
 get_cache_content :: FilePath -> Handle -> IO ()
 get_cache_content dir_path channel =
   do
-    get_file_content (dir_path ++ "/.cache") channel
     get_func_map_content channel
+    get_file_content (dir_path ++ "/.cache") channel
 
 
 get_file_content :: FilePath -> Handle  -> IO ()
@@ -49,6 +49,7 @@ apply_reply_function request_line channel =
   do
     hPutStr channel (reply_function request_line)
 
+
 get_func_map_content :: Handle -> IO ()
 get_func_map_content channel = get_func_map_content_rec channel (extractFunMap initMap)
   where
@@ -56,4 +57,5 @@ get_func_map_content channel = get_func_map_content_rec channel (extractFunMap i
    get_func_map_content_rec channel [] = do hPutStrLn channel ""
    get_func_map_content_rec channel ((key, func):map) =
      do
+       hPutStrLn channel 
        hPutStrLn channel key
