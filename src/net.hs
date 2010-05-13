@@ -1,3 +1,9 @@
+--TODO
+-- Syslog writing
+-- Dynamic files
+-- Demonisation
+-- Chroot
+
 module GopherConnection where
 
 import Control.Concurrent
@@ -10,21 +16,26 @@ import System.IO
 import Data.Maybe (Maybe, fromJust, isJust, isNothing)
 
 import ReplyRequest (reply_request)
-import ConnectionList (Connections, ConnectionId, MConnection, ConnectionId, Connection)
+import ConnectionList
 
-import Config (port, hostname)
+import Config (config_port, config_hostname)
 
---Must be remplaced by a better implementation
 chomp :: String -> String
-chomp (c:[]) = []
-chomp (c:cs) = c : (chomp cs)
+chomp = init
+
 
 --The management loop for each clients
-th_clientLoop :: Handle -> IO ()
-th_clientLoop channel = do
-			  input <- hGetLine channel
-			  reply_request (chomp input) channel
-			  hClose channel
+th_clientLoop :: Connection -> IO ()
+th_clientLoop connection =
+  let
+    handle :: Handle
+    handle = channel connection
+  in
+    do
+      input <- hGetLine handle
+      reply_request (chomp input) connection
+      hClose handle
+
 
 --Accept connections on listen socket, and add them to the list
 --It is a blocking instruction
@@ -32,8 +43,10 @@ accept_connection_thread :: Socket -> ConnectionId -> IO Connection
 accept_connection_thread listen_socket last_id =
     do
       (new_handle, new_hostname, new_portnumber) <- accept listen_socket
-      thread <- forkIO (th_clientLoop new_handle)
-      return (thread, last_id + 1, new_handle, new_hostname, new_portnumber)
+      new_connection <- return $ Connection (last_id + 1) new_handle new_hostname new_portnumber
+      thread <- forkIO (th_clientLoop new_connection)
+      return new_connection
+
 
 accept_loop :: Socket -> IO ()
 accept_loop listen_socket = accept_loop_rec [] listen_socket
@@ -44,7 +57,8 @@ accept_loop listen_socket = accept_loop_rec [] listen_socket
 	  new_connection <- accept_connection_thread listen_socket 0
 	  accept_loop_rec (new_connection : connections) listen_socket
 
+
 listen_network =
   do
-      listen_socket <- listenOn (PortNumber 70)
+      listen_socket <- listenOn (PortNumber config_port)
       accept_loop listen_socket

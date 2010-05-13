@@ -1,4 +1,4 @@
-SRC = main.hs net.hs parse_request.hs parser.hs read_cache.hs connection_list.hs functions_map.hs
+SRC = main.hs net.hs parse_request.hs parser.hs read_cache.hs connection_list.hs functions_map.hs config.hs Syslog.hs
 OBJECT = $(SRC:.hs=.o)
 OBJECT_INT = $(SRC:.hs=.hi)
 MAIN = "main.hs"

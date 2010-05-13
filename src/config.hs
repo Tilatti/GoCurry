@@ -1,7 +1,9 @@
 module Config where
 
-port :: PortId
-port = PortNumber 70
+import Network.Socket
 
-hostname :: String
-hostname = "localhost"
+config_port :: PortNumber
+config_port = 70
+
+config_hostname :: String
+config_hostname = "localhost"
