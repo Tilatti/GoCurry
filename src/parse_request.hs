@@ -55,7 +55,8 @@ apply_reply_function connection request_line channel =
  in
    if (not (isJust reply_function)) then
      do
-       syslog Warning ("Unknow descriptor on connection : " ++ (show connection))
+       syslog Warning ("Unknow descriptor '" ++ request_line++
+       		       "' from : " ++ (show connection))
        hPutStrLn channel "Unknow descriptor"
    else
      do

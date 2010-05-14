@@ -16,6 +16,22 @@
 
 module Main where
 
-import GopherConnection(listen_network)
+import GopherConnection (listen_network)
+import Config (pid_file)
 
-main = listen_network
+import System.IO
+import System.Posix.Types
+import System.Posix.Process
+
+write_pid :: ProcessID -> IO ()
+write_pid pid =
+  do
+    file_handle <- openFile pid_file WriteMode
+    hPutStr file_handle (show pid)
+    hClose file_handle
+
+main =
+  do
+    pid <- forkProcess listen_network
+    write_pid pid
+
