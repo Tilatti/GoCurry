@@ -8,7 +8,7 @@
 
 -- This program is distributed in the hope that it will be useful,
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 -- GNU General Public License for more details.
 
 -- You should have received a copy of the GNU General Public License
@@ -23,6 +23,10 @@ import System.IO
 import System.Posix.Types
 import System.Posix.Process
 
+import System.Environment
+import Opts
+
+
 write_pid :: ProcessID -> IO ()
 write_pid pid =
   do
@@ -30,8 +34,17 @@ write_pid pid =
     hPutStr file_handle (show pid)
     hClose file_handle
 
+
 main =
   do
-    pid <- forkProcess listen_network
-    write_pid pid
+    argv <- getArgs
+    opts <- compileOpts argv
+    have_arg <- exec_actions (fst opts)
+    if not have_arg
+      then
+	do
+	  pid <- forkProcess listen_network
+	  write_pid pid
+      else
+	do return ()
 
