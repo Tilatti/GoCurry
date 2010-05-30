@@ -13,7 +13,7 @@ import Config (config_port, config_hostname)
 import ConnectionList
 import FunctionMap
 
-type FileType = Int
+import FileUtils
 
 reply_request :: FilePath -> Connection -> IO ()
 reply_request "" connection =
@@ -32,6 +32,17 @@ get_ressource connection request_line (is_dir, is_file) channel
   | is_file = get_file_content request_line channel
   | otherwise = apply_reply_function connection request_line channel
 
+get_dir_entries :: FilePath -> IO String
+get_dir_entries pathname =
+  do
+    filepaths <- getDirectoryContents pathname
+    return (get_dir_entries_rec filepaths)
+    where
+      get_dir_entries_rec :: [FilePath] -> String
+      get_dir_entries_rec (filename : filenames) =
+          build_entry_file (get_file_type filename) filename config_port config_hostname ++ get_dir_entries_rec filenames
+      get_dir_entries_rec [] = ""
+
 
 get_cache_content :: FilePath -> Handle -> IO ()
 get_cache_content dir_path channel =
@@ -45,7 +56,6 @@ get_file_content file_path channel =
   do
     s <- readFile file_path
     hPutStr channel s
-
 
 
 apply_reply_function :: Connection -> String -> Handle -> IO ()
@@ -73,6 +83,9 @@ get_func_map_content channel = get_func_map_content_rec channel (getSelectors in
        hPutStrLn channel (build_entry 0 selector selector config_port config_hostname)
        get_func_map_content_rec channel map
 
+build_entry_file :: FileType -> FilePath -> PortNumber -> String -> String
+build_entry_file file_type pathname port hostname =
+  build_entry file_type pathname pathname port hostname
 
 build_entry :: FileType -> String -> String -> PortNumber -> String -> String
 build_entry file_type selector_name selector port hostname =
