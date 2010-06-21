@@ -47,4 +47,3 @@ main =
 	  write_pid pid
       else
 	do return ()
-

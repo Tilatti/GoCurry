@@ -76,20 +76,17 @@ get_dir_entries :: FilePath -> IO String
 get_dir_entries pathname =
   do
     file_infos <- list_dir pathname
-    return (get_dir_entries_rec file_infos)
+    return (foldr (cons_dir_entries pathname) "" file_infos)
     where
-      get_dir_entries_rec :: [(FilePath, Bool)] -> String
-      get_dir_entries_rec file_infos = foldr cons_dir_entries "" file_infos
-
-      cons_dir_entries :: (FilePath, Bool) -> String -> String
-      cons_dir_entries (filename, is_dir)  entries
+      cons_dir_entries :: String -> (FilePath, Bool) -> String -> String
+      cons_dir_entries parentDirName (filename, is_dir)  entries
         | is_dir =
 	    if (filename == "..") || (filename == ".") then
 	      (++) "" entries
 	    else
-	      (++) (build_entry_dir filename) entries
+	      (++) (build_entry_dir parentDirName filename) entries
 	| otherwise =
-	    (++) (build_entry_file' filename) entries
+	    (++) (build_entry_file' parentDirName filename) entries
 
 
 get_func_map_content :: Handle -> IO ()
@@ -102,17 +99,24 @@ get_func_map_content channel = get_func_map_content_rec channel (getSelectors in
        hPutStrLn channel (build_entry 0 selector selector config_port config_hostname)
        get_func_map_content_rec channel map
 
-build_entry_dir :: FilePath -> String
-build_entry_dir pathname =
-  build_entry_file 1 pathname config_port config_hostname
 
-build_entry_file' :: FilePath -> String
-build_entry_file' pathname =
-  build_entry_file (get_file_type pathname) pathname config_port config_hostname
+build_entry_dir :: FilePath -> FilePath -> String
+build_entry_dir parentDirName pathname =
+  build_entry_file 1 parentDirName pathname config_port config_hostname
 
-build_entry_file :: FileType -> FilePath -> PortNumber -> String -> String
-build_entry_file file_type pathname port hostname =
-  build_entry file_type pathname pathname port hostname
+
+build_entry_file' :: FilePath -> FilePath -> String
+build_entry_file' parentDirName pathname =
+  let
+    file_type = get_file_type pathname
+  in
+    build_entry_file file_type parentDirName pathname config_port config_hostname
+
+
+build_entry_file :: FileType -> FilePath -> FilePath -> PortNumber -> String -> String
+build_entry_file file_type parentDirName pathname port hostname =
+  build_entry file_type pathname (parentDirName ++ "/" ++ pathname) port hostname
+
 
 build_entry :: FileType -> String -> String -> PortNumber -> String -> String
 build_entry file_type selector_name selector port hostname =

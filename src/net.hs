@@ -1,7 +1,6 @@
 --TODO
 -- + Syslog writing
 -- + Demonisation
--- Dynamic files
 -- Chroot
 
 module GopherConnection where
