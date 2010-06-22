@@ -20,4 +20,3 @@ read_config file_path =
     file_handle <- openFile file_path ReadMode
     content <- getContents file_handle
     fromJust (parse_config_entries content)
-

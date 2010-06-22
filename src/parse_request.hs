@@ -26,7 +26,7 @@ reply_request request_line connection =
     is_file <- doesFileExist request_line
     get_ressource connection request_line (is_dir, is_file) (channel connection)
 
-
+-- If the descriptor is not associated to a file, it is a function name
 get_ressource :: Connection -> FilePath -> (Bool, Bool) -> Handle -> IO ()
 get_ressource connection request_line (is_dir, is_file) channel
   | is_dir = get_dir_content request_line channel
