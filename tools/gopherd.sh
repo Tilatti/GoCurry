@@ -1,6 +1,6 @@
 #! /bin/sh
 
-GOPHERD=./src/gopherd
+GOPHERD=../src/gopherd
 PIDFILE=/var/run/gopherd.pid
 
 
@@ -9,8 +9,8 @@ gopherd_stop ()
       PID=$(pidof ${GOPHERD})
 
       #Test if the program running
-      if [ $? = 1 ] ; then
-	echo ${GOPHERD} "doesn't running"
+      if [$? = 1] ; then
+	echo ${GOPHERD} "doesn't running"
 	exit 1
       fi
 
@@ -27,7 +27,7 @@ if [ -x $GOPHERD ] ; then
   exit 1
 fi
 
-if [ -x $PIDFILE ] ; then
+if [ -x $PIDFILE ]; then
   echo "PID file already exist : " $PIDFILE >&2
   exit 1
 fi
@@ -45,6 +45,4 @@ case $1 in
      gopherd_stop
      gopherd_start
     ;;
-    status)
-    ;;
-
+esac

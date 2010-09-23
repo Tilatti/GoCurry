@@ -10,7 +10,7 @@ data Flag =
  	  Version
         | Verbose
 	| Dynamic
-	| Help
+	| Help
 	deriving Eq
 
 options :: [OptDescr Flag]
@@ -32,10 +32,10 @@ compileOpts argv =
 is_verbose :: [Flag] -> Bool
 is_verbose = isJust . find (Verbose ==)
 
-is_version :: [Flag] -> Bool
+is_version :: [Flag] -> Bool
 is_version = isJust . find (Version ==)
 
-is_dynamic :: [Flag] -> Bool
+is_dynamic :: [Flag] -> Bool
 is_dynamic = isJust . find (Dynamic ==)
 
 is_help :: [Flag] -> Bool
@@ -64,8 +64,8 @@ actions =
     (Help, print_help)
   ]
 
-exec_actions :: [Flag] -> IO Bool
-exec_actions [] = return False
+exec_actions :: [Flag] -> IO Bool
+exec_actions [] = return False
 exec_actions flags = exec_actions_rec actions flags
   where
     exec_actions_rec :: [(Flag, IO ())] -> [Flag] -> IO Bool

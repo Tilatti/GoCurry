@@ -14,7 +14,7 @@ import Network
 import System.IO
 import Data.Maybe (Maybe, fromJust, isJust, isNothing)
 
-import ReplyRequest (reply_request)
+import ReplyRequest (replyRequest)
 import ConnectionList
 
 import Config (config_port, config_hostname)
@@ -32,7 +32,7 @@ th_clientLoop connection =
   in
     do
       input <- hGetLine handle
-      reply_request (chomp input) connection
+      replyRequest (chomp input) connection
       hClose handle
 
 

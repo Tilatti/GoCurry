@@ -15,8 +15,9 @@ aboutPrint :: ReplyFunction
 aboutPrint input = "GoCurry a gopher server written by Alban Tilatti"
 
 serverStat :: ReplyFunction
-serverStat input = "The server work on host : " ++ config_hostname ++ ", " ++
-		   "with the port : " ++ config_port ++ "\n" ++
+serverStat input = ""
+--serverStat input = "The server work on host : " ++ config_hostname ++ ", " ++
+--		   "with the port : " ++ config_port ++ "\n" ++
 
 addFunction :: String -> ReplyFunction -> ReplyFunctionMap -> ReplyFunctionMap
 addFunction key func map = Map.insert key func map

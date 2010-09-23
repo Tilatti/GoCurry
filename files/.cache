@@ -1,1 +1,3 @@
-0fichier.txt	files/fichier.txt	localhost	70
+9fichier.txt	fichier.txt	localhost	70
+9#!call:/bin/ls file-list localhost 70
+9#!call-guile:~/scheme.scm scheme localhost 70

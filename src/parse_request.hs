@@ -16,22 +16,7 @@ import FunctionMap
 import FileUtils
 import DirUtils
 
-reply_request :: FilePath -> Connection -> IO ()
-reply_request "" connection =
-  do
-    get_dir_content "./" (channel connection)
-reply_request request_line connection =
-  do
-    is_dir <- doesDirectoryExist request_line
-    is_file <- doesFileExist request_line
-    get_ressource connection request_line (is_dir, is_file) (channel connection)
-
--- If the descriptor is not associated to a file, it is a function name
-get_ressource :: Connection -> FilePath -> (Bool, Bool) -> Handle -> IO ()
-get_ressource connection request_line (is_dir, is_file) channel
-  | is_dir = get_dir_content request_line channel
-  | is_file = get_file_content request_line channel
-  | otherwise = apply_reply_function connection request_line channel
+import ExternExecutable (callExecutable, parseCallRequest)
 
 
 -- Send a list of descriptor
@@ -42,11 +27,13 @@ get_dir_content dir_path channel =
   in
     do
       has_cache <- doesFileExist cache_file
-      get_func_map_content channel
+      get_func_map_content channel -- Print the list of GoCurry internal function
+      print has_cache
       if has_cache
 	then get_file_content (dir_path ++ "/.cache") channel
 	else do sending_str <- get_dir_entries dir_path
-		hPutStr channel sending_str
+		hPutStr channel sending_str -- Print the list of file in directory
+
 
 -- Send a file
 get_file_content :: FilePath -> Handle  -> IO ()
@@ -71,6 +58,7 @@ apply_reply_function connection request_line channel =
      do
        hPutStr channel ((fromJust reply_function) request_line)
 
+
 -- Send a list of descriptor
 get_dir_entries :: FilePath -> IO String
 get_dir_entries pathname =
@@ -80,8 +68,8 @@ get_dir_entries pathname =
     where
       cons_dir_entries :: String -> (FilePath, Bool) -> String -> String
       cons_dir_entries parentDirName (filename, is_dir)  entries
-        | is_dir =
-	    if (filename == "..") || (filename == ".") then
+        | is_dir =
+	    if (filename == "..") || (filename == ".") then
 	      (++) "" entries
 	    else
 	      (++) (build_entry_dir parentDirName filename) entries
@@ -93,7 +81,7 @@ get_func_map_content :: Handle -> IO ()
 get_func_map_content channel = get_func_map_content_rec channel (getSelectors initMap)
   where
    get_func_map_content_rec :: Handle -> [String] -> IO ()
-   get_func_map_content_rec channel [] = do hPutStrLn channel ""
+   get_func_map_content_rec channel [] = do hPutStrLn channel ""
    get_func_map_content_rec channel (selector:map) =
      do
        hPutStrLn channel (build_entry 0 selector selector config_port config_hostname)
@@ -122,3 +110,29 @@ build_entry :: FileType -> String -> String -> PortNumber -> String -> String
 build_entry file_type selector_name selector port hostname =
   (show file_type) ++ selector_name ++ "\t" ++ selector ++
   "\t" ++ hostname ++ "\t" ++ (show port) ++ "\r\n"
+
+
+replyRequest :: FilePath -> Connection -> IO ()
+replyRequest "" connection =
+  do
+    get_dir_content "./" (channel connection)
+replyRequest request_line connection =
+  let
+    ch = (channel connection)
+  in
+    do
+      is_dir <- doesDirectoryExist request_line
+      if (is_dir)
+	then get_dir_content request_line ch
+	else
+	  do
+	    is_file <- doesFileExist request_line
+	    if (is_file)
+	      then get_file_content request_line ch
+	      else let
+		     exec_info = parseCallRequest request_line
+		   in
+		     do
+		       if (isJust exec_info)
+			 then callExecutable (fst (fromJust exec_info)) ch
+			 else apply_reply_function connection request_line ch

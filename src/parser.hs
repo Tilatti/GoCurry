@@ -1,3 +1,6 @@
+-- A cool way to build a parser ! Thanks to Lennart Andersson
+-- Reference :  www.cs.lth.se/EDA120/assignment4/parser.pdf
+
 module Parsing where
 
 import Data.Maybe
@@ -140,3 +143,7 @@ isNotTab c = (ord c) /= 9
 
 tab :: Parser Char
 tab = char ? isTab
+
+parseFilePath :: Parser String
+parseFilePath = parse_iter ((char ? isLetter) !
+			    (char ? (\c -> (ord c) == 47)))

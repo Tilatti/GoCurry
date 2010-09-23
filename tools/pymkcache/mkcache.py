@@ -6,7 +6,7 @@ hostname = "localhost"
 port = 70
 cache_filename = ".cache"
 
-files_types = {".txt": 6, ".exe" : 9, ".rtf" : 6, ".jpg" : 9}
+files_type = {".txt": 6, ".exe" : 9, ".rtf" : 6, ".jpg" : 9}
 
 class Entry:
   def __init__(self, hostname, port, selector_name, selector, file_type):
@@ -62,7 +62,7 @@ def create_entries(pathname = "./"):
 #Create the .cache of the directory 'pathname'
 def create_cache(pathname = "./"):
   entries = create_entries(pathname)
-  write_entries(entries, pathname + ".cache")
+  write_entries(entries, pathname + "/" + ".cache")
 
 if __name__ == "__main__":
   create_cache()

@@ -24,8 +24,7 @@ import System.Posix.Types
 import System.Posix.Process
 
 import System.Environment
-import Opts
-
+import Opts (exec_actions, compileOpts)
 
 write_pid :: ProcessID -> IO ()
 write_pid pid =
