@@ -1,4 +1,4 @@
-module FunctionMap where
+module FunctionMap (initFunMap, getFunSelectors, getFunction) where
 
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -25,16 +25,14 @@ addFunction key func map = Map.insert key func map
 getFunction :: String -> ReplyFunctionMap -> MReplyFunction
 getFunction key map = Map.lookup key map
 
-
 createFunMap :: [(String, ReplyFunction)] -> ReplyFunctionMap
 createFunMap = Map.fromList
 
 extractFunMap :: ReplyFunctionMap -> [(String, ReplyFunction)]
 extractFunMap = Map.toList
 
+initFunMap :: ReplyFunctionMap
+initFunMap = createFunMap [("echo", echo), ("about", aboutPrint)]
 
-initMap :: ReplyFunctionMap
-initMap = createFunMap [("echo", echo), ("about", aboutPrint)]
-
-getSelectors :: ReplyFunctionMap -> [String]
-getSelectors = Map.keys
+getFunSelectors :: ReplyFunctionMap -> [String]
+getFunSelectors = Map.keys

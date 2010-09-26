@@ -40,6 +40,17 @@ infixl 6 #
 	Nothing -> Nothing
 	Just(q, cs) -> Just((p,q), cs)
 
+(##) :: Parser a -> Parser a -> Parser [a]
+(m ## n) cs =
+  case m cs of
+   Nothing -> Nothing
+   Just (p, cs) ->
+     case n cs of
+       Nothing -> Nothing
+       Just(q, cs) -> Just((p:q:[]), cs)
+
+-- (##) :: Parser (a, b) -> Parser c -> Parser (a, b, c)
+
 infixl 5 >->
 (>->) :: Parser a -> (a -> b) -> Parser b
 (m >-> k) cs =
@@ -125,7 +136,7 @@ double :: Parser Char
 double = char #> lit
 
 bldNumber :: Int -> Int -> Int
-bldNumber n d = 10*n+d
+bldNumber n d = 10 * n + d
 
 number' :: Int -> Parser Int
 number' n =
@@ -145,5 +156,4 @@ tab :: Parser Char
 tab = char ? isTab
 
 parseFilePath :: Parser String
-parseFilePath = parse_iter ((char ? isLetter) !
-			    (char ? (\c -> (ord c) == 47)))
+parseFilePath = parse_iter (char ? isLetter)

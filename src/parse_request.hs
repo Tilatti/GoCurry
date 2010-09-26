@@ -27,16 +27,14 @@ get_dir_content dir_path channel =
   in
     do
       has_cache <- doesFileExist cache_file
-      get_func_map_content channel -- Print the list of GoCurry internal function
-      print has_cache
+      -- get_func_map_content channel -- Print the list of GoCurry internal function
       if has_cache
 	then get_file_content (dir_path ++ "/.cache") channel
-	else do sending_str <- get_dir_entries dir_path
-		hPutStr channel sending_str -- Print the list of file in directory
+	else get_dir_entries dir_path channel
 
 
 -- Send a file
-get_file_content :: FilePath -> Handle  -> IO ()
+get_file_content :: FilePath -> Handle -> IO ()
 get_file_content file_path channel =
   do
     s <- readFile file_path
@@ -47,7 +45,7 @@ get_file_content file_path channel =
 apply_reply_function :: Connection -> String -> Handle -> IO ()
 apply_reply_function connection request_line channel =
  let
-   reply_function = (getFunction request_line initMap)
+   reply_function = (getFunction request_line initFunMap)
  in
    if (not (isJust reply_function)) then
      do
@@ -59,12 +57,12 @@ apply_reply_function connection request_line channel =
        hPutStr channel ((fromJust reply_function) request_line)
 
 
--- Send a list of descriptor
-get_dir_entries :: FilePath -> IO String
-get_dir_entries pathname =
+-- Send a list of descriptor in handle
+get_dir_entries :: FilePath -> Handle -> IO ()
+get_dir_entries pathname channel =
   do
     file_infos <- list_dir pathname
-    return (foldr (cons_dir_entries pathname) "" file_infos)
+    hPutStr channel (foldr (cons_dir_entries pathname) "" file_infos)
     where
       cons_dir_entries :: String -> (FilePath, Bool) -> String -> String
       cons_dir_entries parentDirName (filename, is_dir)  entries
@@ -78,7 +76,7 @@ get_dir_entries pathname =
 
 
 get_func_map_content :: Handle -> IO ()
-get_func_map_content channel = get_func_map_content_rec channel (getSelectors initMap)
+get_func_map_content channel = get_func_map_content_rec channel (getFunSelectors initFunMap)
   where
    get_func_map_content_rec :: Handle -> [String] -> IO ()
    get_func_map_content_rec channel [] = do hPutStrLn channel ""

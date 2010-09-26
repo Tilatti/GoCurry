@@ -6,11 +6,11 @@ import Control.Concurrent
 import System.IO
 
 type ConnectionId = Int
-data Connection = Connection { 
+data Connection = Connection {
 		    		id :: ConnectionId,
 		    		channel :: Handle,
 		    		hostname :: HostName,
-		    		port :: PortNumber 
+		    		port :: PortNumber
 		  	     }
 type MConnection = Maybe Connection
 type Connections = [Connection]
