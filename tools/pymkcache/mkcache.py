@@ -39,7 +39,7 @@ def get_file_type(filename):
 
 def create_entry(filename):
   if (os.path.isdir (filename)):
-    new_entry = Entry (hostname, port, filename, filename, 0)
+    new_entry = Entry (hostname, port, filename, filename, 1)
     create_cache(filename)
   else :
     new_entry = Entry (hostname, port, filename, filename,

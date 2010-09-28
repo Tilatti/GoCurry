@@ -22,7 +22,6 @@ import Config (config_port, config_hostname)
 chomp :: String -> String
 chomp = init
 
-
 --The management loop for each clients
 th_clientLoop :: Connection -> IO ()
 th_clientLoop connection =
