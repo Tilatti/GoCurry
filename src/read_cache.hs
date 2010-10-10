@@ -63,7 +63,7 @@ parse_cache_line cs =
 	  decons_paire (((n1, n2), (n3, n4)), n5) = (n1, n2, n3, n4, n5)
       _ -> Nothing
 
--- parse_cache_file :: Parser [RessourceInformation]
+parse_cache_file :: Parser [RessourceInformation]
 parse_cache_file = parse_iter parse_cache_line
 
 readCacheFile :: String -> Maybe [RessourceInformation]

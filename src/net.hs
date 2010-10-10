@@ -19,9 +19,6 @@ import ConnectionList
 
 import Config (config_port, config_hostname)
 
-chomp :: String -> String
-chomp = init
-
 --The management loop for each clients
 th_clientLoop :: Connection -> IO ()
 th_clientLoop connection =
@@ -31,9 +28,8 @@ th_clientLoop connection =
   in
     do
       input <- hGetLine handle
-      replyRequest (chomp input) connection
+      replyRequest connection input
       hClose handle
-
 
 --Accept connections on listen socket, and add them to the list
 --It is a blocking instruction
@@ -41,19 +37,19 @@ accept_connection_thread :: Socket -> ConnectionId -> IO Connection
 accept_connection_thread listen_socket last_id =
     do
       (new_handle, new_hostname, new_portnumber) <- accept listen_socket
-      new_connection <- return $ Connection (last_id + 1) new_handle new_hostname new_portnumber
+      new_connection <- return $ Connection last_id  new_handle new_hostname new_portnumber
       thread <- forkIO (th_clientLoop new_connection)
       return new_connection
 
 
 accept_loop :: Socket -> IO ()
-accept_loop listen_socket = accept_loop_rec [] listen_socket
+accept_loop listen_socket = accept_loop_rec [] 0 listen_socket
   where
-    accept_loop_rec :: Connections -> Socket -> IO ()
-    accept_loop_rec connections listen_socket =
+    accept_loop_rec :: Connections -> ConnectionId -> Socket -> IO ()
+    accept_loop_rec connections id listen_socket =
 	do
-	  new_connection <- accept_connection_thread listen_socket 0
-	  accept_loop_rec (new_connection : connections) listen_socket
+	  new_connection <- accept_connection_thread listen_socket id
+	  accept_loop_rec (new_connection : connections) (id + 1) listen_socket
 
 
 listen_network =

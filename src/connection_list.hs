@@ -18,3 +18,4 @@ type Connections = [Connection]
 instance Show Connection where
   show connection = "(" ++ show (hostname connection) ++ ", " ++
 		    	   show (port connection) ++ ")"
+

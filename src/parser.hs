@@ -6,7 +6,13 @@ module Parsing where
 import Data.Maybe
 import Data.Char (isDigit, digitToInt, isLetter, isSpace, ord)
 
+import Control.Applicative
+
 type Parser a = String -> Maybe (a, String)
+
+--Parsing without any fail
+parse_return :: a -> Parser a
+parse_return a cs = Just(a,cs)
 
 sizeStr :: String -> Int
 sizeStr (c:cs) = 1 + sizeStr cs
@@ -18,10 +24,6 @@ infix 7 ?
   case m cs of
     Nothing -> Nothing
     Just(a,cs) -> if p a then Just(a,cs) else Nothing
-
---Parsing without any fail
-parse_return :: a -> Parser a
-parse_return a cs = Just(a,cs)
 
 infixl 3 !
 (!) :: Parser a -> Parser a -> Parser a
@@ -157,3 +159,12 @@ tab = char ? isTab
 
 parseFilePath :: Parser String
 parseFilePath = parse_iter (char ? isLetter)
+
+{-
+newtype SeqParser a = SeqParser { getParser :: Parser a }
+  deriving (Applicative)
+
+instance Applicative SeqParser where
+  pure p = parse_return p
+  p1 <*> p2 = p1 # p2
+    -}

@@ -18,6 +18,8 @@ import DirUtils
 
 import ExternExecutable (callExecutable, parseCallRequest)
 
+import Control.Applicative
+
 -- Send a list of descriptor
 get_dir_content :: FilePath -> Handle -> IO ()
 get_dir_content dir_path channel =
@@ -41,19 +43,20 @@ get_file_content file_path channel =
 
 
 -- Send a result of a function invocation
-apply_reply_function :: Connection -> String -> Handle -> IO ()
-apply_reply_function connection request_line channel =
+apply_reply_function :: Connection -> String -> IO ()
+apply_reply_function connection request_line =
  let
    reply_function = (getFunction request_line initFunMap)
+   ch = channel connection
  in
    if (not (isJust reply_function)) then
      do
        syslog Warning ("Unknow descriptor '" ++ request_line ++
        		       "' from : " ++ (show connection))
-       hPutStrLn channel "Unknow descriptor"
+       hPutStrLn ch "Unknow descriptor"
    else
      do
-       hPutStr channel ((fromJust reply_function) request_line)
+       hPutStr ch ((fromJust reply_function) request_line)
 
 
 -- Send a list of descriptor in handle
@@ -67,7 +70,7 @@ get_dir_entries pathname channel =
       cons_dir_entries parentDirName (filename, is_dir)  entries
         | is_dir =
 	    if (filename == "..") || (filename == ".") || (filename == "./") then
-	      (++) "" entries
+	      entries
 	    else
 	      (++) (build_entry_dir parentDirName filename) entries
 	| otherwise =
@@ -111,27 +114,77 @@ build_entry file_type selector_name selector port hostname =
   (show file_type) ++ selector_name ++ "\t" ++ selector ++
   "\t" ++ hostname ++ "\t" ++ (show port) ++ "\r\n"
 
-replyRequest :: FilePath -> Connection -> IO ()
-replyRequest request_line connection =
+type GopherReply = Connection -> String -> IO Bool
+
+actionIsDir :: GopherReply
+actionIsDir conn request_line =
+  do
+    is_dir <- doesDirectoryExist request_line
+    if (is_dir)
+      then
+        get_dir_content request_line (channel conn) >>
+	return True
+      else
+	return False
+
+actionIsFile :: GopherReply
+actionIsFile conn request_line =
+  do
+    is_file <- doesFileExist request_line
+    if (is_file)
+      then
+	get_file_content request_line (channel conn) >>
+	return True
+      else
+	return False
+
+actionIsCallToExec :: GopherReply
+actionIsCallToExec conn request_line =
+  let
+    exec_info = parseCallRequest request_line
+  in
+    do
+      if (isJust exec_info)
+        then
+	  do
+	    callExecutable (fst (fromJust exec_info)) (channel conn)
+	    return True
+	else
+	  return False
+
+actionIsCallToFun :: GopherReply
+actionIsCallToFun conn request =
+  do
+    apply_reply_function conn request
+    return True
+
+gopher_replies :: [GopherReply]
+gopher_replies = [actionIsDir,
+		  actionIsFile,
+		  actionIsCallToExec,
+		  actionIsCallToFun]
+
+
+applyGopherReply :: Connection -> String -> [GopherReply] -> IO ()
+applyGopherReply connection request [] = return ()
+applyGopherReply connection request (action : xs) =
+  do
+    action_result <- action connection request
+    if (action_result)
+      then
+      	return ()
+      else
+	applyGopherReply connection request xs
+
+replyRequest :: Connection -> String -> IO ()
+replyRequest connection line =
   let
     ch = (channel connection)
+    request_line = init line
   in
       if (request_line == "")
-	then get_dir_content "./" (channel connection)
+	then
+	  get_dir_content "./" (channel connection)
 	else
-	  do
-	    is_dir <- doesDirectoryExist request_line
-	    if (is_dir)
-	      then get_dir_content request_line ch
-	      else
-		do
-		  is_file <- doesFileExist request_line
-		  if (is_file)
-		    then get_file_content request_line ch
-		    else let
-			   exec_info = parseCallRequest request_line
-			 in
-			   do
-			     if (isJust exec_info)
-			       then callExecutable (fst (fromJust exec_info)) ch
-			       else apply_reply_function connection request_line ch
+	  applyGopherReply connection request_line gopher_replies
+

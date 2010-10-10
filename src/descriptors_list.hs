@@ -1,19 +1,48 @@
 module Descriptors where
 
+import Network
+
+import Data.Map (Map)
+import qualified Data.Map as Map
+
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-type Descriptor = String
-type DescriptorSet = Set Descriptor
+import Maybe
 
-haveDescriptor :: Descriptor -> DescriptorSet -> bool
-haveDescriptor descriptor descriptor_set = Set.member descriptor descriptor_set
+import ConnectionList
+import ReadCache (readCacheFile, getDescriptorList,
+		  RessourceInformation, RessourceDescriptor,
+		  getDescriptor)
 
-addDescriptor :: Descriptor -> DescriptorSet -> DescriptorSet
-addDescriptor descriptor descriptor_set = Set.insert
+type Descriptor = RessourceDescriptor
+type DescriptorMap = Map HostName (Set Descriptor)
 
-initDescriptorSet :: DescriptorSet
-initDescriptorSet = Set.empty
+haveDescriptor :: HostName -> DescriptorMap -> Descriptor -> Bool
+haveDescriptor conn_id descriptor_map descriptor = descriptor `Set.member` (descriptor_map Map.! conn_id)
 
-addCacheFile :: String -> DescriptorSet -> DescriptorSet
-addCacheFile file_content descriptor_set =
+addDescriptor :: HostName -> DescriptorMap -> Descriptor -> DescriptorMap
+addDescriptor conn_id descriptor_map descriptor =
+  let
+    old_set = descriptor_map Map.! conn_id
+  in
+    Map.insert conn_id (Set.insert descriptor old_set) descriptor_map
+
+initDescriptorMap :: DescriptorMap
+initDescriptorMap  = Map.empty
+
+addCacheFile :: HostName -> DescriptorMap -> String -> Maybe DescriptorMap
+addCacheFile conn_id descriptor_map file_content  =
+  let
+    parse_result :: Maybe [RessourceInformation]
+    parse_result = readCacheFile file_content
+  in
+    case parse_result of
+      Nothing ->
+      	Nothing
+      Just ressource_infos ->
+        Just $ foldl (addCacheFile_ conn_id) descriptor_map ressource_infos
+	  where
+	    addCacheFile_ :: HostName -> DescriptorMap -> RessourceInformation -> DescriptorMap
+	    addCacheFile_ conn_id desc_map ressource_info =
+	      addDescriptor conn_id desc_map (getDescriptor ressource_info)
