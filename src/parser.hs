@@ -159,12 +159,3 @@ tab = char ? isTab
 
 parseFilePath :: Parser String
 parseFilePath = parse_iter (char ? isLetter)
-
-{-
-newtype SeqParser a = SeqParser { getParser :: Parser a }
-  deriving (Applicative)
-
-instance Applicative SeqParser where
-  pure p = parse_return p
-  p1 <*> p2 = p1 # p2
-    -}

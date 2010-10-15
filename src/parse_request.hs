@@ -187,4 +187,3 @@ replyRequest connection line =
 	  get_dir_content "./" (channel connection)
 	else
 	  applyGopherReply connection request_line gopher_replies
-
