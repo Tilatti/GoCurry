@@ -16,7 +16,7 @@ import FunctionMap
 import FileUtils
 import DirUtils
 
-import ExternExecutable (callExecutable, parseCallRequest)
+import ExternExecutable (callExecutable, strToExecInfo)
 
 import Control.Applicative
 
@@ -141,13 +141,13 @@ actionIsFile conn request_line =
 actionIsCallToExec :: GopherReply
 actionIsCallToExec conn request_line =
   let
-    exec_info = parseCallRequest request_line
+    exec_info = strToExecInfo request_line
   in
     do
       if (isJust exec_info)
         then
 	  do
-	    callExecutable (fst (fromJust exec_info)) (channel conn)
+	    callExecutable (fromJust exec_info) (channel conn)
 	    return True
 	else
 	  return False
@@ -182,8 +182,8 @@ replyRequest connection line =
     ch = (channel connection)
     request_line = init line
   in
-      if (request_line == "")
-	then
-	  get_dir_content "./" (channel connection)
-	else
-	  applyGopherReply connection request_line gopher_replies
+    if (request_line == "")
+      then
+	get_dir_content "./" (channel connection)
+      else
+	applyGopherReply connection request_line gopher_replies

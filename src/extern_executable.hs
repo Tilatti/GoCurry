@@ -9,11 +9,12 @@ import System.IO (hPutStr, Handle)
 data CallType = Simple | Guile | Python | Shell
 type ExecInfo = (CallType, String)
 
-parseCallType :: Parser CallType
-parseCallType = (accept "#!call:") -# (parse_return Simple)
-
 parseCallRequest :: Parser ExecInfo
-parseCallRequest = parseCallType # parseFilePath
+parseCallRequest = ((accept "#!call:") -# (parse_return Simple)) # parseFilePath
+
+strToExecInfo :: String -> Maybe ExecInfo
+strToExecInfo = applyParser parseCallRequest
+
 
 -- Call the executable and write his stdout to channel
 callExecutable :: ExecInfo -> Handle -> IO ()
