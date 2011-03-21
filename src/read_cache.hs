@@ -13,10 +13,10 @@ type RessourceServer = String
 type Port = Int
 
 type RessourceInformation = (RessourceType,
-			     RessourceName,
-			     RessourceDescriptor,
-			     RessourceServer,
-			     Port)
+                             RessourceName,
+                             RessourceDescriptor,
+                             RessourceServer,
+                             Port)
 
 getType :: RessourceInformation -> RessourceType
 getType (ty, _, _, _, _) = ty
@@ -49,10 +49,10 @@ parse_port = number #- parseSep
 
 parse_cache_line :: Parser RessourceInformation
 parse_cache_line =
-  glue5Parser parse_ressource_type
-  	      parse_ressource_name
-	      parse_ressource_descriptor
-  	      parse_ressource_server parse_port
+	glue5Parser parse_ressource_type
+              parse_ressource_name
+              parse_ressource_descriptor
+              parse_ressource_server parse_port
 
 parse_cache_file :: Parser [RessourceInformation]
 parse_cache_file = parse_iter parse_cache_line

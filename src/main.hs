@@ -28,21 +28,21 @@ import Opts (exec_actions, compileOpts)
 
 write_pid :: ProcessID -> IO ()
 write_pid pid =
-  do
-    file_handle <- openFile pid_file WriteMode
-    hPutStr file_handle (show pid)
-    hClose file_handle
+	do
+		file_handle <- openFile pid_file WriteMode
+		hPutStr file_handle (show pid)
+		hClose file_handle
 
 
 main =
-  do
-    argv <- getArgs
-    opts <- compileOpts argv
-    have_arg <- exec_actions (fst opts)
-    if not have_arg
-      then
 	do
-	  pid <- forkProcess listen_network
-	  write_pid pid
-      else
-	do return ()
+		argv <- getArgs
+		opts <- compileOpts argv
+		have_arg <- exec_actions (fst opts)
+		if not have_arg
+			then
+				do
+					pid <- forkProcess listen_network
+					write_pid pid
+			else
+				do return ()

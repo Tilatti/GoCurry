@@ -23,23 +23,23 @@ import Control.Applicative
 -- Send a list of descriptor
 get_dir_content :: FilePath -> Handle -> IO ()
 get_dir_content dir_path channel =
-  let
-    cache_file = dir_path ++ "/.cache"
-  in
-    do
-      has_cache <- doesFileExist cache_file
-      -- get_func_map_content channel -- Print the list of GoCurry internal function
-      if has_cache
-	then get_file_content cache_file channel
-	else get_dir_entries dir_path channel
+	let
+		cache_file = dir_path ++ "/.cache"
+	in
+		do
+			has_cache <- doesFileExist cache_file
+			-- get_func_map_content channel -- Print the list of GoCurry internal function
+			if has_cache
+				then get_file_content cache_file channel
+				else get_dir_entries dir_path channel
 
 
 -- Send a file
 get_file_content :: FilePath -> Handle -> IO ()
 get_file_content file_path channel =
-  do
-    s <- readFile file_path
-    hPutStr channel s
+	do
+		s <- readFile file_path
+		hPutStr channel s
 
 
 -- Send a result of a function invocation
@@ -62,51 +62,51 @@ apply_reply_function connection request_line =
 -- Send a list of descriptor in handle
 get_dir_entries :: FilePath -> Handle -> IO ()
 get_dir_entries pathname channel =
-  do
-    file_infos <- list_dir pathname
-    hPutStr channel (foldr (cons_dir_entries pathname) "" file_infos)
-    where
-      cons_dir_entries :: String -> (FilePath, Bool) -> String -> String
-      cons_dir_entries parentDirName (filename, is_dir)  entries
-        | is_dir =
-	    if (filename == "..") || (filename == ".") || (filename == "./") then
-	      entries
-	    else
-	      (++) (build_entry_dir parentDirName filename) entries
-	| otherwise =
-	    (++) (build_entry_file' parentDirName filename) entries
+	do
+		file_infos <- list_dir pathname
+		hPutStr channel (foldr (cons_dir_entries pathname) "" file_infos)
+		where
+			cons_dir_entries :: String -> (FilePath, Bool) -> String -> String
+			cons_dir_entries parentDirName (filename, is_dir)  entries
+				| is_dir =
+					if (filename == "..") || (filename == ".") || (filename == "./") then
+						entries
+					else
+						(++) (build_entry_dir parentDirName filename) entries
+				| otherwise =
+						(++) (build_entry_file' parentDirName filename) entries
 
 
 get_func_map_content :: Handle -> IO ()
 get_func_map_content channel = get_func_map_content_rec channel (getFunSelectors initFunMap)
-  where
-    get_func_map_content_rec :: Handle -> [String] -> IO ()
-    get_func_map_content_rec channel [] = do hPutStrLn channel ""
-    get_func_map_content_rec channel (selector:map) =
-      do
-        hPutStrLn channel (build_entry 0 selector selector config_port config_hostname)
-        get_func_map_content_rec channel map
+	where
+		get_func_map_content_rec :: Handle -> [String] -> IO ()
+		get_func_map_content_rec channel [] = do hPutStrLn channel ""
+		get_func_map_content_rec channel (selector:map) =
+			do
+				hPutStrLn channel (build_entry 0 selector selector config_port config_hostname)
+				get_func_map_content_rec channel map
 
 
 build_entry_dir :: FilePath -> FilePath -> String
 build_entry_dir parentDirName pathname =
-    build_entry_file 1 parentDirName pathname config_port config_hostname
+	build_entry_file 1 parentDirName pathname config_port config_hostname
 
 
 build_entry_file' :: FilePath -> FilePath -> String
 build_entry_file' parentDirName pathname =
-  let
-    file_type = get_file_type pathname
-  in
-    build_entry_file file_type parentDirName pathname config_port config_hostname
+	let
+		file_type = get_file_type pathname
+	in
+		build_entry_file file_type parentDirName pathname config_port config_hostname
 
 
 build_entry_file :: FileType -> FilePath -> FilePath -> PortNumber -> String -> String
 build_entry_file file_type parentDirName pathname port hostname =
-  if (parentDirName == "./") then
-    build_entry file_type pathname pathname port hostname
-  else
-    build_entry file_type pathname (parentDirName ++ "/" ++ pathname) port hostname
+	if (parentDirName == "./") then
+		build_entry file_type pathname pathname port hostname
+	else
+		build_entry file_type pathname (parentDirName ++ "/" ++ pathname) port hostname
 
 
 build_entry :: FileType -> String -> String -> PortNumber -> String -> String
@@ -114,55 +114,54 @@ build_entry file_type selector_name selector port hostname =
   (show file_type) ++ selector_name ++ "\t" ++ selector ++
   "\t" ++ hostname ++ "\t" ++ (show port) ++ "\r\n"
 
+
 type GopherReply = Connection -> String -> IO Bool
 
 actionIsDir :: GopherReply
 actionIsDir conn request_line =
-  do
-    is_dir <- doesDirectoryExist request_line
-    if (is_dir)
-      then
-        get_dir_content request_line (channel conn) >>
-	return True
-      else
-	return False
+	do
+		is_dir <- doesDirectoryExist request_line
+		if (is_dir)
+			then
+				getDirContent request_line (channel conn)
+				return True
+			else
+				return False
 
 actionIsFile :: GopherReply
 actionIsFile conn request_line =
-  do
-    is_file <- doesFileExist request_line
-    if (is_file)
-      then
-	get_file_content request_line (channel conn) >>
-	return True
-      else
+	do
+		is_file <- doesFileExist request_line
+		if (is_file)
+			then
+				getFileContent request_line (channel conn)
+				return True
+			else
 	return False
 
 actionIsCallToExec :: GopherReply
 actionIsCallToExec conn request_line =
-  let
-    exec_info = strToExecInfo request_line
-  in
-    do
-      if (isJust exec_info)
-        then
-	  do
-	    callExecutable (fromJust exec_info) (channel conn)
-	    return True
-	else
-	  return False
+	let
+		exec_info = strToExecInfo request_line
+	in
+		do
+			if (isJust exec_info)
+				then
+					do
+						callExecutable (fromJust exec_info) (channel conn)
+						return True
+				else
+					return False
 
 actionIsCallToFun :: GopherReply
 actionIsCallToFun conn request =
-  do
-    apply_reply_function conn request
-    return True
+	do
+		apply_reply_function conn request
+		return True
 
 gopher_replies :: [GopherReply]
-gopher_replies = [actionIsDir,
-		  actionIsFile,
-		  actionIsCallToExec,
-		  actionIsCallToFun]
+gopher_replies =
+	[actionIsDir, actionIsFile, actionIsCallToExec, actionIsCallToFun]
 
 
 applyGopherReply :: Connection -> String -> [GopherReply] -> IO ()
@@ -174,16 +173,16 @@ applyGopherReply connection request (action : xs) =
       then
       	return ()
       else
-	applyGopherReply connection request xs
+				applyGopherReply connection request xs
 
 replyRequest :: Connection -> String -> IO ()
 replyRequest connection line =
-  let
-    ch = (channel connection)
-    request_line = init line
-  in
-    if (request_line == "")
-      then
-	get_dir_content "./" (channel connection)
-      else
-	applyGopherReply connection request_line gopher_replies
+	let
+		ch = (channel connection)
+		request_line = init line
+	in
+		if (request_line == "")
+			then
+				get_dir_content "./" (channel connection)
+			else
+				applyGopherReply connection request_line gopher_replies
