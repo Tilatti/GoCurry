@@ -13,7 +13,10 @@ import Control.Monad.Error
 
 import Debug.Trace
 
-import ParsingLocation
+data Location = Location Int | NoLocation
+instance Error Location where
+	noMsg = NoLocation
+	strMsg s = NoLocation
 
 type Parser a = ErrorT Location (State String) a
 

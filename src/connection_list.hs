@@ -15,6 +15,8 @@ data Connection = Connection {
 type MConnection = Maybe Connection
 type Connections = [Connection]
 
+-- Connection type, redefined operators :
+-- => show
 instance Show Connection where
 	show connection =
 		"(" ++ show (hostname connection) ++ ", " ++ show (port connection) ++ ")"

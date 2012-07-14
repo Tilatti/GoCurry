@@ -1,5 +1,10 @@
 module GopherActions where
 
+-- The function type  GopherReply
+--   Connection : Connection descriptor
+--   String : Remote request
+--   return true => Correct action
+--   return false => Incrorrect action
 type GopherReply = Connection -> String -> IO Bool
 
 actionIsDir :: GopherReply
@@ -9,9 +14,9 @@ actionIsDir conn request_line =
     if (is_dir)
       then
         get_dir_content request_line (channel conn) >>
-	return True
+				return True
       else
-	return False
+				return False
 
 actionIsFile :: GopherReply
 actionIsFile conn request_line =
@@ -19,10 +24,10 @@ actionIsFile conn request_line =
     is_file <- doesFileExist request_line
     if (is_file)
       then
-	get_file_content request_line (channel conn) >>
-	return True
+				get_file_content request_line (channel conn) >>
+				return True
       else
-	return False
+				return False
 
 actionIsCallToExec :: GopherReply
 actionIsCallToExec conn request_line =
@@ -31,12 +36,11 @@ actionIsCallToExec conn request_line =
   in
     do
       if (isJust exec_info)
-        then
-	  do
-	    callExecutable (fst (fromJust exec_info)) (channel conn)
-	    return True
-	else
-	  return False
+  			then
+					callExecutable (fst (fromJust exec_info)) (channel conn) >>
+					return True
+				else
+					return False
 
 actionIsCallToFun :: GopherReply
 actionIsCallToFun conn request =
@@ -60,6 +64,4 @@ applyGopherReply connection request (action : xs) =
       then
       	return ()
       else
-	applyGopherReply connection request xs
-
-
+				applyGopherReply connection request xs

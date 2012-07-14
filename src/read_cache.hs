@@ -27,10 +27,11 @@ getDescriptor (_, _, desc, _, _) = desc
 isRessourceType :: Char -> Bool
 isRessourceType = isDigit
 
+-- ####
+-- Parser function :
 
 parseSep :: Parser Char
 parseSep = lit '\t'
-
 
 parse_ressource_type :: Parser RessourceType
 parse_ressource_type = (char ? isRessourceType >-> digitToInt)
@@ -57,9 +58,13 @@ parse_cache_line =
 parse_cache_file :: Parser [RessourceInformation]
 parse_cache_file = parse_iter parse_cache_line
 
+-- ####
+
+-- Parse cache_content data
 readCacheFile :: String -> Maybe [RessourceInformation]
 readCacheFile cache_content = applyParser parse_cache_file cache_content
 
+-- Extract RessourceDescriptor list from RessourceInformation list
 getDescriptorList :: [RessourceInformation] -> [RessourceDescriptor]
 getDescriptorList ressource_information_list = map getDescriptor ressource_information_list
 

@@ -21,8 +21,8 @@ import ExternExecutable (callExecutable, strToExecInfo)
 import Control.Applicative
 
 -- Send a list of descriptor
-get_dir_content :: FilePath -> Handle -> IO ()
-get_dir_content dir_path channel =
+getDirContent :: FilePath -> Handle -> IO ()
+getDirContent dir_path channel =
 	let
 		cache_file = dir_path ++ "/.cache"
 	in
@@ -30,13 +30,13 @@ get_dir_content dir_path channel =
 			has_cache <- doesFileExist cache_file
 			-- get_func_map_content channel -- Print the list of GoCurry internal function
 			if has_cache
-				then get_file_content cache_file channel
+				then getFileContent cache_file channel
 				else get_dir_entries dir_path channel
 
 
 -- Send a file
-get_file_content :: FilePath -> Handle -> IO ()
-get_file_content file_path channel =
+getFileContent :: FilePath -> Handle -> IO ()
+getFileContent file_path channel =
 	do
 		s <- readFile file_path
 		hPutStr channel s
@@ -123,8 +123,9 @@ actionIsDir conn request_line =
 		is_dir <- doesDirectoryExist request_line
 		if (is_dir)
 			then
-				getDirContent request_line (channel conn)
-				return True
+				do
+					getDirContent request_line (channel conn)
+					return True
 			else
 				return False
 
@@ -134,10 +135,11 @@ actionIsFile conn request_line =
 		is_file <- doesFileExist request_line
 		if (is_file)
 			then
-				getFileContent request_line (channel conn)
-				return True
+				do
+					getFileContent request_line (channel conn)
+					return True
 			else
-	return False
+				return False
 
 actionIsCallToExec :: GopherReply
 actionIsCallToExec conn request_line =
@@ -183,6 +185,6 @@ replyRequest connection line =
 	in
 		if (request_line == "")
 			then
-				get_dir_content "./" (channel connection)
+				getDirContent "./" (channel connection)
 			else
 				applyGopherReply connection request_line gopher_replies

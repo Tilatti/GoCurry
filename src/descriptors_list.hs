@@ -1,5 +1,7 @@
 module Descriptors where
 
+-- Haskell modules
+
 import Network
 
 import Data.Map (Map)
@@ -10,6 +12,8 @@ import qualified Data.Set as Set
 
 import Maybe
 
+-- Local modules
+
 import ConnectionList
 import ReadCache (readCacheFile, getDescriptorList,
 		  RessourceInformation, RessourceDescriptor,
@@ -18,9 +22,11 @@ import ReadCache (readCacheFile, getDescriptorList,
 type Descriptor = RessourceDescriptor
 type DescriptorMap = Map HostName (Set Descriptor)
 
+-- Return true if the descriptor_map has the descriptor
 haveDescriptor :: HostName -> DescriptorMap -> Descriptor -> Bool
 haveDescriptor conn_id descriptor_map descriptor = descriptor `Set.member` (descriptor_map Map.! conn_id)
 
+-- Add descriptor inside the descriptor_map
 addDescriptor :: HostName -> DescriptorMap -> Descriptor -> DescriptorMap
 addDescriptor conn_id descriptor_map descriptor =
 	let
@@ -28,9 +34,11 @@ addDescriptor conn_id descriptor_map descriptor =
 	in
 		Map.insert conn_id (Set.insert descriptor old_set) descriptor_map
 
+-- Empty descriptor map
 initDescriptorMap :: DescriptorMap
 initDescriptorMap  = Map.empty
 
+--
 addCacheFile :: HostName -> DescriptorMap -> String -> Maybe DescriptorMap
 addCacheFile conn_id descriptor_map file_content  =
 	let
