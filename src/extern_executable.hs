@@ -1,12 +1,12 @@
 module ExternExecutable where
--- module Main where
+--module Main where
 
 import Parsing
 import Data.Maybe
 import System.Process (readProcess)
-import System.IO (hPutStr, Handle)
+import System.IO (hPutStr, Handle, stdout)
 
-data CallType = Simple | Guile | Python | Shell
+data CallType = Simple | Python | Shell
 type ExecInfo = (CallType, String)
 
 parseCallRequest :: Parser ExecInfo
@@ -14,7 +14,6 @@ parseCallRequest = ((accept "#!call:") -# (parse_return Simple)) # parseFilePath
 
 strToExecInfo :: String -> Maybe ExecInfo
 strToExecInfo = applyParser parseCallRequest
-
 
 -- Call the executable and write his stdout to channel
 callExecutable :: ExecInfo -> Handle -> IO ()
@@ -27,12 +26,13 @@ callInterpreter :: ExecInfo -> IO String
 callInterpreter (Simple, file) =
   do
     readProcess file [] ""
-callInterpreter (Guile, file) = return ""
 callInterpreter (Python, file) = return ""
 callInterpreter (Shell, file) = return ""
 
 {-
 main =
   do
-    result <- (callExecutable "#!call:/bin/ls")
-    print result -}
+		exec_info <- return $ (fromJust (strToExecInfo "#!call:/bin/ls"))
+		result <- (callExecutable exec_info stdout)
+		print (snd exec_info)
+		print result -}

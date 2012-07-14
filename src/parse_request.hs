@@ -28,7 +28,7 @@ getDirContent dir_path channel =
 	in
 		do
 			has_cache <- doesFileExist cache_file
-			-- get_func_map_content channel -- Print the list of GoCurry internal function
+			--get_func_map_content channel -- Print the list of GoCurry internal functiontest1
 			if has_cache
 				then getFileContent cache_file channel
 				else get_dir_entries dir_path channel
@@ -40,24 +40,6 @@ getFileContent file_path channel =
 	do
 		s <- readFile file_path
 		hPutStr channel s
-
-
--- Send a result of a function invocation
-apply_reply_function :: Connection -> String -> IO ()
-apply_reply_function connection request_line =
- let
-   reply_function = (getFunction request_line initFunMap)
-   ch = channel connection
- in
-   if (not (isJust reply_function)) then
-     do
-       syslog Warning ("Unknow descriptor '" ++ request_line ++
-       		       "' from : " ++ (show connection))
-       hPutStrLn ch "Unknow descriptor"
-   else
-     do
-       hPutStr ch ((fromJust reply_function) request_line)
-
 
 -- Send a list of descriptor in handle
 get_dir_entries :: FilePath -> Handle -> IO ()
@@ -87,6 +69,9 @@ get_func_map_content channel = get_func_map_content_rec channel (getFunSelectors
 				hPutStrLn channel (build_entry 0 selector selector config_port config_hostname)
 				get_func_map_content_rec channel map
 
+-- ###############
+-- Building entries functions
+-- ###############
 
 build_entry_dir :: FilePath -> FilePath -> String
 build_entry_dir parentDirName pathname =
@@ -114,6 +99,9 @@ build_entry file_type selector_name selector port hostname =
   (show file_type) ++ selector_name ++ "\t" ++ selector ++
   "\t" ++ hostname ++ "\t" ++ (show port) ++ "\r\n"
 
+-- ##############
+-- GopherReply def
+-- ##############
 
 type GopherReply = Connection -> String -> IO Bool
 
@@ -146,36 +134,53 @@ actionIsCallToExec conn request_line =
 	let
 		exec_info = strToExecInfo request_line
 	in
-		do
-			if (isJust exec_info)
-				then
-					do
-						callExecutable (fromJust exec_info) (channel conn)
-						return True
-				else
-					return False
+		if (isJust exec_info)
+			then
+				do
+					callExecutable (fromJust exec_info) (channel conn)
+					return True
+			else
+				return False
 
 actionIsCallToFun :: GopherReply
-actionIsCallToFun conn request =
-	do
-		apply_reply_function conn request
-		return True
+actionIsCallToFun conn request_line =
+	 let
+		 reply_function = (getFunction request_line initFunMap)
+		 ch = channel conn
+	 in
+		 if (not (isJust reply_function)) then
+			 return False
+		 else
+			 do
+				 hPutStr (channel conn) ((fromJust reply_function) request_line)
+				 return True
 
+-- List of action
 gopher_replies :: [GopherReply]
 gopher_replies =
 	[actionIsDir, actionIsFile, actionIsCallToExec, actionIsCallToFun]
 
+-- ##############
+-- ##############
+-- ##############
 
 applyGopherReply :: Connection -> String -> [GopherReply] -> IO ()
-applyGopherReply connection request [] = return ()
-applyGopherReply connection request (action : xs) =
+applyGopherReply connection request_line [] =
+	do
+		syslog Warning ("Unknow descriptor '" ++ request_line ++
+							 "' from : " ++ (show connection))
+		hPutStrLn (channel connection) ("Unknow descriptor : " ++ request_line)
+		return ()
+applyGopherReply connection request (action : action_list) =
   do
     action_result <- action connection request
     if (action_result)
       then
       	return ()
       else
-				applyGopherReply connection request xs
+				applyGopherReply connection request action_list
+
+-- replyRequest
 
 replyRequest :: Connection -> String -> IO ()
 replyRequest connection line =

@@ -12,7 +12,7 @@ echo :: ReplyFunction
 echo input = input
 
 aboutPrint :: ReplyFunction
-aboutPrint input = "GoCurry a gopher server written by Alban Tilatti"
+aboutPrint input = "GoCurry a gopher server implemented with Haskell"
 
 serverStat :: ReplyFunction
 serverStat input = ""

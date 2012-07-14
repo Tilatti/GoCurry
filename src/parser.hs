@@ -1,6 +1,8 @@
 -- A cool way to build a parser ! Thanks to Lennart Andersson
 -- This version is based on Stat Monad
 -- Reference :  www.cs.lth.se/EDA120/assignment4/parser.pdf
+--
+-- TODO : Implement Location
 
 module Parsing where
 
@@ -82,6 +84,7 @@ infixl 5 >->
 cons :: (a, [a]) -> [a]
 cons (hd, tl) = hd:tl
 
+--
 parse_iterate :: Parser a -> Int -> Parser [a]
 parse_iterate m 0 = parse_return []
 parse_iterate m i = m # parse_iterate m (i-1) >-> cons
@@ -135,8 +138,9 @@ token_sep m sep = m #- parse_iter sep
 word :: Parser String
 word = token letters
 
+-- Test if parsed string is equal to w String
 accept :: String -> Parser String
-accept w = token (parse_iterate char (sizeStr w) ? (==w))
+accept w = (parse_iterate char (sizeStr w) ? (==w))
 
 infix 4 #>
 (#>) :: Parser a -> (a -> Parser b) -> Parser b
@@ -167,17 +171,19 @@ tab :: Parser Char
 tab = char ? isTab
 
 parseFilePath :: Parser String
-parseFilePath = parse_iter (char ? isLetter)
+--parseFilePath = parse_iter (char ? isLetter)
+parseFilePath = parse_iter char
 
 -- The UnWrapper function, apply a parser to string, and return result
 applyParser :: Parser a -> String -> Maybe a
-applyParser p cs =
+applyParser parser str =
   let
-    result = runState (runErrorT p) cs
+    result = runState (runErrorT parser) str
   in
     case result of
-      (Right val, "") -> Just val
-      (Left loc, cs)  -> Nothing
+			(Right val, "") -> Just val
+			(Right val, str) -> Just val
+			(Left loc, str)  -> Nothing
 
 -- ugly gluing functions
 
